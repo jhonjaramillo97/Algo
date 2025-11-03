@@ -55,12 +55,14 @@ except FileNotFoundError as e:
 
 # --- Componentes de la UI ---
 sliders = []
-numeric_cols = []
+# CORRECCIÓN: Crear una lista de columnas que SÍ tienen sliders
+numeric_cols_with_sliders = []
 if not df_results.empty:
     numeric_cols = df_results.select_dtypes(include=['number']).columns
     for col in numeric_cols:
         min_val, max_val = df_results[col].min(), df_results[col].max()
         if min_val == max_val: continue
+        numeric_cols_with_sliders.append(col) # Guardar solo las columnas que tendrán slider
         marks = {int(i): str(int(i)) for i in np.linspace(min_val, max_val, 5, dtype=int)}
         sliders.append(html.Div([
             html.Label(f'{col}:', style={'paddingBottom': '5px', 'display': 'block'}),
@@ -94,12 +96,14 @@ app.layout = html.Div(style={'backgroundColor': '#1E1E1E', 'color': 'white', 'fo
 # ======================================================================================
 @app.callback(
     Output('visualizations', 'children'),
-    [Input(f'slider-{col}', 'value') for col in numeric_cols],
+    # CORRECCIÓN: Usar la lista filtrada de columnas para los Inputs
+    [Input(f'slider-{col}', 'value') for col in numeric_cols_with_sliders],
     prevent_initial_call=True
 )
 def update_visuals(*slider_values):
     df_filtered = df_results.copy()
-    for i, col in enumerate(numeric_cols):
+    # CORRECCIÓN: Iterar sobre la lista correcta
+    for i, col in enumerate(numeric_cols_with_sliders):
         min_val, max_val = slider_values[i]
         df_filtered = df_filtered[(df_filtered[col] >= min_val) & (df_filtered[col] <= max_val)]
 
